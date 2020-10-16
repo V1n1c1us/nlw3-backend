@@ -1,19 +1,22 @@
 import { Request, Response} from 'express';
 import { getRepository } from 'typeorm';
 import Orphanages from '../Entities/Orphanages';
+import orphanagesView from '../Views/orphanages_view';
 
 export default {
   async index(request: Request, response: Response) {
     const orphanagesRepository = getRepository(Orphanages);
 
-    const orphanages = await orphanagesRepository.find();
+    const orphanages = await orphanagesRepository.find({
+      relations: ['images']
+    });
 
-    return response.json(orphanages);
+    return response.json(orphanagesView.renderMany(orphanages));
   },
 
   async create(request: Request, response: Response) {
     const {
-      name,
+      nome,
       latitude,
       longitude,
       about,
@@ -29,7 +32,7 @@ export default {
       return { path: image.filename };
     })
     const orphanages = orphanagesRepository.create({
-      name,
+      nome,
       latitude,
       longitude,
       about,
@@ -49,8 +52,10 @@ export default {
 
     const orphanagesRepository = getRepository(Orphanages);
 
-    const orphanages = await orphanagesRepository.findOneOrFail(id);
+    const orphanage = await orphanagesRepository.findOneOrFail(id, {
+      relations: ['images']
+    });
 
-    return response.json(orphanages);
+    return response.json(orphanagesView.render(orphanage));
   },
 }
